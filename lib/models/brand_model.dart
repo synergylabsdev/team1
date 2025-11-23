@@ -17,12 +17,12 @@ class BrandModel {
 
   factory BrandModel.fromJson(Map<String, dynamic> json) {
     return BrandModel(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      description: json['description'] as String?,
-      logoUrl: json['logo_url'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      id: _requireString(json['id'], 'id'),
+      name: _requireString(json['name'], 'name'),
+      description: json['description']?.toString(),
+      logoUrl: json['logo_url']?.toString(),
+      createdAt: _requireDate(json['created_at'], 'created_at'),
+      updatedAt: _requireDate(json['updated_at'], 'updated_at'),
     );
   }
 
@@ -56,3 +56,16 @@ class BrandModel {
   }
 }
 
+String _requireString(dynamic value, String fieldName) {
+  if (value == null) {
+    throw FormatException('Missing required field: $fieldName');
+  }
+  return value.toString();
+}
+
+DateTime _requireDate(dynamic value, String fieldName) {
+  if (value == null) {
+    throw FormatException('Missing required field: $fieldName');
+  }
+  return DateTime.parse(value.toString());
+}

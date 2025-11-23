@@ -20,7 +20,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   bool _isMapView = true;
   Position? _currentPosition;
   List<EventModel> _events = [];
@@ -31,10 +31,13 @@ class _HomeScreenState extends State<HomeScreen> {
   EventFilters _filters = EventFilters();
   Set<Marker> _markers = {};
   int _selectedTab = 0; // 0 = Events, 1 = Brands
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    _loadEvents();
     _getCurrentLocation();
     _loadBrands();
   }
@@ -64,29 +67,31 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      final radius = _filters.radius?.miles;
-      final dateRange = _filters.dateFilter?.dateRange;
-      
-      print('Loading events with filters: radius=$radius, dateRange=$dateRange');
-      
+      // final radius = _filters.radius?.miles;
+      // final dateRange = _filters.dateFilter?.dateRange;
+
+      // print(
+      //   'Loading events with filters: radius=$radius, dateRange=$dateRange',
+      // );
+
       final events = await EventService.getEvents(
         latitude: _currentPosition?.latitude,
         longitude: _currentPosition?.longitude,
-        radiusMiles: radius?.toDouble(),
-        startDate: dateRange?.start,
-        endDate: dateRange?.end,
+        // radiusMiles: radius?.toDouble(),
+        // startDate: dateRange?.start,
+        // endDate: dateRange?.end,
         categoryIds: _filters.categoryIds,
         showPastEvents: false, // Set to true for testing to see all events
       );
 
       print('Loaded ${events.length} events');
-      
-      if (events.isEmpty && _currentPosition == null && radius == null) {
-        print('No events found. Possible reasons:');
-        print('1. No events in database');
-        print('2. All events have ended');
-        print('3. Database connection issue');
-      }
+
+      // if (events.isEmpty && _currentPosition == null && radius == null) {
+      //   print('No events found. Possible reasons:');
+      //   print('1. No events in database');
+      //   print('2. All events have ended');
+      //   print('3. Database connection issue');
+      // }
 
       setState(() {
         _events = events;
@@ -100,7 +105,8 @@ class _HomeScreenState extends State<HomeScreen> {
       print('Stack trace: $stackTrace');
       setState(() {
         _isLoading = false;
-        _errorMessage = 'Error loading events: ${e.toString()}\n\nCheck console for details.';
+        _errorMessage =
+            'Error loading events: ${e.toString()}\n\nCheck console for details.';
       });
     }
   }
@@ -126,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _updateMapMarkers() {
     final markers = <Marker>{};
-    
+
     for (var event in _events) {
       final isLive = EventService.isEventLive(event);
       final marker = Marker(
@@ -175,6 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('SampleFinder'),
         bottom: TabBar(
+          controller: _tabController,
           tabs: const [
             Tab(icon: Icon(Icons.event), text: 'Events'),
             Tab(icon: Icon(Icons.business), text: 'Brands'),
@@ -220,9 +227,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(width: 8),
                       Text(
                         '${user.points} Points',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(width: 8),
                       Chip(
@@ -238,9 +244,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
           // Content based on selected tab
           Expanded(
-            child: _selectedTab == 0
-                ? _buildEventsTab()
-                : _buildBrandsTab(),
+            child: _selectedTab == 0 ? _buildEventsTab() : _buildBrandsTab(),
           ),
         ],
       ),
@@ -254,7 +258,11 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.event_busy, size: 64, color: AppTheme.textSecondary),
+            const Icon(
+              Icons.event_busy,
+              size: 64,
+              color: AppTheme.textSecondary,
+            ),
             const SizedBox(height: 16),
             Text(
               'No events to display on map',
@@ -317,10 +325,7 @@ class _HomeScreenState extends State<HomeScreen> {
       onMapCreated: (controller) {
         if (_markers.isNotEmpty && _currentPosition != null) {
           controller.animateCamera(
-            CameraUpdate.newLatLngBounds(
-              _getBounds(),
-              100,
-            ),
+            CameraUpdate.newLatLngBounds(_getBounds(), 100),
           );
         }
       },
@@ -330,8 +335,14 @@ class _HomeScreenState extends State<HomeScreen> {
   LatLngBounds _getBounds() {
     if (_events.isEmpty) {
       return LatLngBounds(
-        southwest: LatLng(_currentPosition!.latitude - 0.1, _currentPosition!.longitude - 0.1),
-        northeast: LatLng(_currentPosition!.latitude + 0.1, _currentPosition!.longitude + 0.1),
+        southwest: LatLng(
+          _currentPosition!.latitude - 0.1,
+          _currentPosition!.longitude - 0.1,
+        ),
+        northeast: LatLng(
+          _currentPosition!.latitude + 0.1,
+          _currentPosition!.longitude + 0.1,
+        ),
       );
     }
 
@@ -365,7 +376,11 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 64, color: AppTheme.errorColor),
+              const Icon(
+                Icons.error_outline,
+                size: 64,
+                color: AppTheme.errorColor,
+              ),
               const SizedBox(height: 16),
               Text(
                 _errorMessage!,
@@ -391,8 +406,12 @@ class _HomeScreenState extends State<HomeScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text('Events loaded: ${_events.length}'),
-                            Text('Current position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}'),
-                            Text('Filters: ${_filters.radius?.miles} miles, ${_filters.dateFilter?.label}'),
+                            Text(
+                              'Current position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}',
+                            ),
+                            Text(
+                              'Filters: ${_filters.radius?.miles} miles, ${_filters.dateFilter?.label}',
+                            ),
                             const SizedBox(height: 16),
                             const Text(
                               'Check console logs for detailed error information.',
@@ -425,7 +444,11 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.event_busy, size: 64, color: AppTheme.textSecondary),
+              const Icon(
+                Icons.event_busy,
+                size: 64,
+                color: AppTheme.textSecondary,
+              ),
               const SizedBox(height: 16),
               Text(
                 'No events found',
@@ -434,9 +457,9 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 8),
               Text(
                 'This could mean:\n• No events in database\n• All events have ended\n• Filters are too restrictive',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.textSecondary,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -472,7 +495,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Loaded ${events.length} events (including past)'),
+                              content: Text(
+                                'Loaded ${events.length} events (including past)',
+                              ),
                             ),
                           );
                         }
@@ -507,7 +532,11 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.business_center, size: 64, color: AppTheme.textSecondary),
+              const Icon(
+                Icons.business_center,
+                size: 64,
+                color: AppTheme.textSecondary,
+              ),
               const SizedBox(height: 16),
               Text(
                 'No brands found',
@@ -516,9 +545,9 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 8),
               Text(
                 'Brands will appear here once they are added to the database.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.textSecondary,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -571,7 +600,11 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.event_busy, size: 64, color: AppTheme.textSecondary),
+            const Icon(
+              Icons.event_busy,
+              size: 64,
+              color: AppTheme.textSecondary,
+            ),
             const SizedBox(height: 16),
             Text(
               'No events found',
@@ -580,9 +613,9 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 8),
             Text(
               'Try adjusting your filters',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.textSecondary,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
             ),
           ],
         ),
@@ -627,10 +660,7 @@ class _FiltersSheet extends StatefulWidget {
   final EventFilters filters;
   final ValueChanged<EventFilters> onFiltersChanged;
 
-  const _FiltersSheet({
-    required this.filters,
-    required this.onFiltersChanged,
-  });
+  const _FiltersSheet({required this.filters, required this.onFiltersChanged});
 
   @override
   State<_FiltersSheet> createState() => _FiltersSheetState();
@@ -656,10 +686,7 @@ class _FiltersSheetState extends State<_FiltersSheet> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Filters',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
+              Text('Filters', style: Theme.of(context).textTheme.titleLarge),
               TextButton(
                 onPressed: () {
                   setState(() {
@@ -671,12 +698,9 @@ class _FiltersSheetState extends State<_FiltersSheet> {
             ],
           ),
           const Divider(),
-          
+
           // Radius Filter
-          Text(
-            'Radius',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
+          Text('Radius', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -695,14 +719,11 @@ class _FiltersSheetState extends State<_FiltersSheet> {
               );
             }).toList(),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Date Filter
-          Text(
-            'Date Range',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
+          Text('Date Range', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -721,9 +742,9 @@ class _FiltersSheetState extends State<_FiltersSheet> {
               );
             }).toList(),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // 21+ Only
           CheckboxListTile(
             title: const Text('21+ Restricted Only'),
@@ -736,9 +757,9 @@ class _FiltersSheetState extends State<_FiltersSheet> {
               });
             },
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Apply Button
           SizedBox(
             width: double.infinity,
@@ -761,10 +782,7 @@ class _BrandCard extends StatelessWidget {
   final BrandModel brand;
   final VoidCallback onTap;
 
-  const _BrandCard({
-    required this.brand,
-    required this.onTap,
-  });
+  const _BrandCard({required this.brand, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -797,9 +815,9 @@ class _BrandCard extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 brand.name,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,

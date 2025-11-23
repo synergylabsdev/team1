@@ -17,12 +17,12 @@ class CategoryModel {
 
   factory CategoryModel.fromJson(Map<String, dynamic> json) {
     return CategoryModel(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      parentId: json['parent_id'] as String?,
-      ageRestriction: json['age_restriction'] as int?,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      id: _requireString(json['id'], 'id'),
+      name: _requireString(json['name'], 'name'),
+      parentId: json['parent_id']?.toString(),
+      ageRestriction: _optionalInt(json['age_restriction']),
+      createdAt: _requireDate(json['created_at'], 'created_at'),
+      updatedAt: _requireDate(json['updated_at'], 'updated_at'),
     );
   }
 
@@ -56,3 +56,32 @@ class CategoryModel {
   }
 }
 
+String _requireString(dynamic value, String fieldName) {
+  if (value == null) {
+    throw FormatException('Missing required field: $fieldName');
+  }
+  return value.toString();
+}
+
+int? _optionalInt(dynamic value) {
+  if (value == null) {
+    return null;
+  }
+  if (value is int) {
+    return value;
+  }
+  if (value is num) {
+    return value.toInt();
+  }
+  if (value is String && value.isNotEmpty) {
+    return int.parse(value);
+  }
+  return null;
+}
+
+DateTime _requireDate(dynamic value, String fieldName) {
+  if (value == null) {
+    throw FormatException('Missing required field: $fieldName');
+  }
+  return DateTime.parse(value.toString());
+}

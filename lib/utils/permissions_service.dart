@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:permission_handler/permission_handler.dart' as ph;
 import 'package:geolocator/geolocator.dart';
 
@@ -5,12 +7,22 @@ class PermissionsService {
   // Location Permission
   static Future<bool> requestLocationPermission() async {
     final status = await ph.Permission.location.request();
+    if (status.isPermanentlyDenied) {
+      await ph.openAppSettings();
+      return false;
+    }
     return status.isGranted;
   }
 
   static Future<bool> checkLocationPermission() async {
     final status = await ph.Permission.location.status;
-    return status.isGranted;
+    if (status.isGranted) {
+      return true;
+    }
+    if (status.isLimited || status.isProvisional) {
+      return true;
+    }
+    return false;
   }
 
   static Future<Position?> getCurrentLocation() async {
@@ -23,10 +35,17 @@ class PermissionsService {
         }
       }
 
-      final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
+      final position =
+          await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.high,
+          ).timeout(
+            const Duration(seconds: 10),
+            onTimeout: () => throw TimeoutException('Location timeout'),
+          );
       return position;
+    } on TimeoutException {
+      final lastKnown = await Geolocator.getLastKnownPosition();
+      return lastKnown;
     } catch (e) {
       print('Error getting location: $e');
       return null;
@@ -49,4 +68,3 @@ class PermissionsService {
     return await ph.openAppSettings();
   }
 }
-

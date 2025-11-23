@@ -15,12 +15,12 @@ enum EventStatus {
   }
 
   static EventStatus fromString(String value) {
-    switch (value) {
-      case 'Active':
+    switch (value.toLowerCase()) {
+      case 'active':
         return EventStatus.active;
-      case 'Live':
+      case 'live':
         return EventStatus.live;
-      case 'Archived':
+      case 'archived':
         return EventStatus.archived;
       default:
         return EventStatus.active;
@@ -63,22 +63,22 @@ class EventModel {
 
   factory EventModel.fromJson(Map<String, dynamic> json) {
     return EventModel(
-      id: json['id'] as String,
-      brandId: json['brand_id'] as String,
-      storeName: json['store_name'] as String,
-      location: json['location'] as String,
-      latitude: (json['latitude'] as num).toDouble(),
-      longitude: (json['longitude'] as num).toDouble(),
-      description: json['description'] as String?,
-      dateStart: DateTime.parse(json['date_start'] as String),
-      dateEnd: DateTime.parse(json['date_end'] as String),
-      qrCodeUrl: json['qr_code_url'] as String?,
-      fallbackCode: json['fallback_code'] as String?,
+      id: _requireString(json['id'], 'id'),
+      brandId: _requireString(json['brand_id'], 'brand_id'),
+      storeName: _requireString(json['store_name'], 'store_name'),
+      location: _requireString(json['location'], 'location'),
+      latitude: _requireDouble(json['latitude'], 'latitude'),
+      longitude: _requireDouble(json['longitude'], 'longitude'),
+      description: json['description']?.toString(),
+      dateStart: _requireDate(json['date_start'], 'date_start'),
+      dateEnd: _requireDate(json['date_end'], 'date_end'),
+      qrCodeUrl: json['qr_code_url']?.toString(),
+      fallbackCode: json['fallback_code']?.toString(),
       status: json['status'] != null
-          ? EventStatus.fromString(json['status'] as String)
+          ? EventStatus.fromString(json['status'].toString())
           : EventStatus.active,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      createdAt: _requireDate(json['created_at'], 'created_at'),
+      updatedAt: _requireDate(json['updated_at'], 'updated_at'),
     );
   }
 
@@ -136,3 +136,26 @@ class EventModel {
   }
 }
 
+String _requireString(dynamic value, String fieldName) {
+  if (value == null) {
+    throw FormatException('Missing required field: $fieldName');
+  }
+  return value.toString();
+}
+
+double _requireDouble(dynamic value, String fieldName) {
+  if (value is num) {
+    return value.toDouble();
+  }
+  if (value is String && value.isNotEmpty) {
+    return double.parse(value);
+  }
+  throw FormatException('Invalid numeric value for $fieldName: $value');
+}
+
+DateTime _requireDate(dynamic value, String fieldName) {
+  if (value == null) {
+    throw FormatException('Missing required field: $fieldName');
+  }
+  return DateTime.parse(value.toString());
+}
