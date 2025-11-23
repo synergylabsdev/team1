@@ -14,39 +14,69 @@ class EventService {
     DateTime? endDate,
     List<String>? categoryIds,
     EventStatus? status,
+    bool showPastEvents = false, // Allow showing past events for testing
   }) async {
     try {
-      // Start with a simple query - don't join brands initially to avoid issues
+      print('EventService.getEvents called');
+      print(
+        'Filters: status=$status, startDate=$startDate, endDate=$endDate, radius=$radiusMiles',
+      );
+
+      // Start with a simple query
       var query = SupabaseService.client.from('events').select('*');
 
-      // Filter by status - show upcoming events (date_end >= now) by default
+      // Filter by status
       if (status != null) {
         query = query.eq('status', status.value);
+        print('Filtered by status: ${status.value}');
       }
 
-      // Always filter to show events that haven't ended yet
-      query = query.gte('date_end', DateTime.now().toIso8601String());
+      // Filter by date range - only show upcoming events by default
+      if (!showPastEvents) {
+        // Show events that haven't ended yet OR are currently live
+        final now = DateTime.now().toIso8601String();
+        query = query.gte('date_end', now);
+        print('Filtered to show events ending after: $now');
+      }
 
-      // Filter by date range
+      // Additional date filters
       if (startDate != null) {
         query = query.gte('date_start', startDate.toIso8601String());
+        print('Filtered by startDate: ${startDate.toIso8601String()}');
       }
       if (endDate != null) {
         query = query.lte('date_end', endDate.toIso8601String());
+        print('Filtered by endDate: ${endDate.toIso8601String()}');
       }
 
+      print('Executing query...');
       final response = await query;
+      print('Query executed. Response type: ${response.runtimeType}');
+      print('Events fetched from DB: ${response.length}');
 
-      print('Events fetched: ${response.length}');
+      if (response.isEmpty) {
+        print('WARNING: No events returned from database');
+        print('This could mean:');
+        print('1. No events exist in the events table');
+        print('2. All events have ended (date_end < now)');
+        print('3. Status filter excluded all events');
+        print('4. Date range filter excluded all events');
+      }
 
       List<EventModel> events = [];
       for (var item in response) {
         try {
-          events.add(EventModel.fromJson(item));
-        } catch (e) {
+          print('Parsing event: ${item['id']} - ${item['store_name']}');
+          final event = EventModel.fromJson(item);
+          events.add(event);
+        } catch (e, stackTrace) {
           print('Error parsing event: $e');
+          print('Event data: $item');
+          print('Stack trace: $stackTrace');
         }
       }
+
+      print('Successfully parsed ${events.length} events');
 
       // Filter by radius if location provided
       if (latitude != null && longitude != null && radiusMiles != null) {
@@ -88,10 +118,13 @@ class EventService {
         });
       }
 
+      print('Final events count after all filters: ${events.length}');
       return events;
-    } catch (e) {
-      print('Error fetching events: $e');
-      return [];
+    } catch (e, stackTrace) {
+      print('ERROR fetching events: $e');
+      print('Stack trace: $stackTrace');
+      print('This might be a database connection issue or query syntax error');
+      rethrow; // Re-throw so UI can show error
     }
   }
 

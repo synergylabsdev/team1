@@ -76,6 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
         startDate: dateRange?.start,
         endDate: dateRange?.end,
         categoryIds: _filters.categoryIds,
+        showPastEvents: false, // Set to true for testing to see all events
       );
 
       print('Loaded ${events.length} events');
@@ -94,11 +95,12 @@ class _HomeScreenState extends State<HomeScreen> {
       });
 
       _updateMapMarkers();
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('Error loading events: $e');
+      print('Stack trace: $stackTrace');
       setState(() {
         _isLoading = false;
-        _errorMessage = 'Error loading events: ${e.toString()}';
+        _errorMessage = 'Error loading events: ${e.toString()}\n\nCheck console for details.';
       });
     }
   }
@@ -246,7 +248,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildMapView() {
-    if (_events.isEmpty && !_isLoading) {
+    // Empty state is handled in _buildEventsTab, but we need a fallback for map
+    if (_events.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -254,20 +257,17 @@ class _HomeScreenState extends State<HomeScreen> {
             const Icon(Icons.event_busy, size: 64, color: AppTheme.textSecondary),
             const SizedBox(height: 16),
             Text(
-              'No events found',
+              'No events to display on map',
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
-            Text(
-              'Try adjusting your filters or check back later',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.textSecondary,
-                  ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadEvents,
-              child: const Text('Refresh'),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _isMapView = false;
+                });
+              },
+              child: const Text('Switch to List View'),
             ),
           ],
         ),
@@ -360,22 +360,134 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (_errorMessage != null) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 64, color: AppTheme.errorColor),
-            const SizedBox(height: 16),
-            Text(
-              _errorMessage!,
-              style: Theme.of(context).textTheme.bodyLarge,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadEvents,
-              child: const Text('Retry'),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 64, color: AppTheme.errorColor),
+              const SizedBox(height: 16),
+              Text(
+                _errorMessage!,
+                style: Theme.of(context).textTheme.bodyLarge,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _loadEvents,
+                child: const Text('Retry'),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () {
+                  // Show debug info
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Debug Info'),
+                      content: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text('Events loaded: ${_events.length}'),
+                            Text('Current position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}'),
+                            Text('Filters: ${_filters.radius?.miles} miles, ${_filters.dateFilter?.label}'),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'Check console logs for detailed error information.',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Close'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                child: const Text('Show Debug Info'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_events.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.event_busy, size: 64, color: AppTheme.textSecondary),
+              const SizedBox(height: 16),
+              Text(
+                'No events found',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'This could mean:\n• No events in database\n• All events have ended\n• Filters are too restrictive',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: _loadEvents,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Refresh'),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  OutlinedButton(
+                    onPressed: _showFilters,
+                    child: const Text('Adjust Filters'),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton(
+                    onPressed: () async {
+                      // Test: Load all events including past ones
+                      setState(() {
+                        _isLoading = true;
+                      });
+                      try {
+                        final events = await EventService.getEvents(
+                          showPastEvents: true,
+                        );
+                        setState(() {
+                          _events = events;
+                          _isLoading = false;
+                        });
+                        _updateMapMarkers();
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Loaded ${events.length} events (including past)'),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        setState(() {
+                          _isLoading = false;
+                        });
+                      }
+                    },
+                    child: const Text('Show All Events'),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -390,16 +502,33 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (_brands.isEmpty) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.business_center, size: 64, color: AppTheme.textSecondary),
-            const SizedBox(height: 16),
-            Text(
-              'No brands found',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.business_center, size: 64, color: AppTheme.textSecondary),
+              const SizedBox(height: 16),
+              Text(
+                'No brands found',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Brands will appear here once they are added to the database.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: _loadBrands,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Refresh'),
+              ),
+            ],
+          ),
         ),
       );
     }
