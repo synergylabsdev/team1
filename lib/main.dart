@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'utils/app_theme.dart';
 import 'services/supabase_service.dart';
 import 'services/auth_service.dart';
-import 'services/notification_service.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/main/main_screen.dart';

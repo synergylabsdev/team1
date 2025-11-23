@@ -7,10 +7,9 @@ import '../../models/brand_model.dart';
 import '../../services/event_service.dart';
 import '../../services/check_in_service.dart';
 import '../../services/favorite_service.dart';
-import '../../services/notification_service.dart';
 import '../../services/supabase_service.dart';
 import '../../utils/app_theme.dart';
-import 'check_in_screen.dart';
+import 'qr_check_in_screen.dart';
 import 'trivia_game_screen.dart';
 import 'review_screen.dart';
 
@@ -167,34 +166,6 @@ class _EventDetailsSheetState extends State<EventDetailsSheet> {
     }
   }
 
-  void _handleCheckIn() {
-    final isLive = EventService.isEventLive(widget.event);
-    
-    if (!isLive) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Event is not live yet. Check-in available during event time.'),
-          backgroundColor: AppTheme.warningColor,
-        ),
-      );
-      return;
-    }
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => CheckInScreen(
-          event: widget.event,
-          onCheckInComplete: () {
-            setState(() {
-              _hasCheckedIn = true;
-            });
-            widget.onCheckIn?.call();
-          },
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -356,8 +327,18 @@ class _EventDetailsSheetState extends State<EventDetailsSheet> {
                                 if (isLive && !_hasCheckedIn)
                                   Expanded(
                                     child: ElevatedButton.icon(
-                                      onPressed: _handleCheckIn,
-                                      icon: const Icon(Icons.qr_code),
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => const QRCheckInScreen(),
+                                          ),
+                                        ).then((_) {
+                                          // Refresh check-in status
+                                          _loadEventDetails();
+                                        });
+                                      },
+                                      icon: const Icon(Icons.qr_code_scanner),
                                       label: const Text('Check In'),
                                       style: ElevatedButton.styleFrom(
                                         padding: const EdgeInsets.symmetric(vertical: 16),
