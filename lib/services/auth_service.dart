@@ -50,12 +50,34 @@ class AuthService {
         username: username,
       );
 
+      // User is created if response.user is not null
+      // Session might be null if email confirmation is required
       if (response.user != null) {
-        await loadUserProfile();
-        return _currentUser;
+        // Wait a bit for the profile insert to complete
+        await Future.delayed(const Duration(milliseconds: 800));
+        
+        // Try to load the profile, with retries
+        int retries = 3;
+        while (retries > 0 && _currentUser == null) {
+          await loadUserProfile();
+          if (_currentUser != null) {
+            break;
+          }
+          await Future.delayed(const Duration(milliseconds: 500));
+          retries--;
+        }
+        
+        // If profile still not loaded, the user was created but profile might have issues
+        // This is okay - user can login and profile will be loaded then
+        // We return null but the signup was successful
+        print('SignUp completed. User ID: ${response.user!.id}, Profile loaded: ${_currentUser != null}');
       }
-      return null;
+      
+      // Return the loaded user if available, otherwise null
+      // The signup screen will check if auth user exists
+      return _currentUser;
     } catch (e) {
+      print('SignUp error: $e');
       rethrow;
     }
   }
@@ -93,6 +115,9 @@ class AuthService {
     final user = SupabaseService.currentUser;
     if (user != null) {
       _currentUser = await SupabaseService.getUserProfile(user.id);
+      if (_currentUser == null) {
+        print('Warning: User profile not found for user ID: ${user.id}');
+      }
     }
   }
 

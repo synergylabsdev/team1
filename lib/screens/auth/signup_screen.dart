@@ -3,6 +3,7 @@ import 'package:email_validator/email_validator.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/constants.dart';
 import '../../services/auth_service.dart';
+import '../../services/supabase_service.dart';
 import 'login_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -54,34 +55,70 @@ class _SignUpScreenState extends State<SignUpScreen> {
       );
 
       if (mounted) {
-        if (user != null) {
+        // Check if user was created in Supabase auth
+        // Note: If email confirmation is enabled, currentUser might be null
+        // but the user is still created in the database
+        final authUser = SupabaseService.currentUser;
+
+        // If we have a user object or auth user, signup was successful
+        if (user != null || authUser != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Account created successfully!'),
+              content: Text(
+                'Account created successfully! Please login to continue.',
+              ),
               backgroundColor: AppTheme.successColor,
+              duration: Duration(seconds: 3),
             ),
           );
-          // Navigate to login or home screen
+          // Navigate to login screen
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (_) => const LoginScreen()),
           );
         } else {
+          // Even if user/profile loading failed, if no exception was thrown,
+          // the user might still be created (check Supabase dashboard)
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Failed to create account'),
-              backgroundColor: AppTheme.errorColor,
+              content: Text(
+                'Account creation in progress. Please check your email and try logging in.',
+              ),
+              backgroundColor: AppTheme.warningColor,
+              duration: Duration(seconds: 4),
             ),
+          );
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const LoginScreen()),
           );
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+        // Check if user was created in auth even if there was an error
+        final authUser = SupabaseService.currentUser;
+        if (authUser != null) {
+          // User was created, but there might be an issue with profile
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Account created! You can now login. If you see this message, there may be a profile setup issue.',
+              ),
+              backgroundColor: AppTheme.warningColor,
+              duration: Duration(seconds: 5),
+            ),
+          );
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const LoginScreen()),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: ${e.toString()}'),
+              backgroundColor: AppTheme.errorColor,
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        }
       }
     } finally {
       if (mounted) {

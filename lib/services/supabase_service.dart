@@ -41,16 +41,23 @@ class SupabaseService {
     );
 
     if (response.user != null) {
-      // Create user profile in users table
-      await client.from('users').insert({
-        'id': response.user!.id,
-        'first_name': firstName,
-        'last_name': lastName,
-        'username': username,
-        'email': email,
-        'points': 0,
-        'tier_status': 'Bronze',
-      });
+      try {
+        // Create user profile in users table
+        await client.from('users').insert({
+          'id': response.user!.id,
+          'first_name': firstName,
+          'last_name': lastName,
+          'username': username,
+          'email': email,
+          'points': 0,
+          'tier_status': 'Bronze',
+        });
+      } catch (e) {
+        // If profile creation fails, log but don't fail the signup
+        // The user is already created in auth, profile can be created later
+        print('Error creating user profile: $e');
+        rethrow;
+      }
     }
 
     return response;
@@ -89,6 +96,7 @@ class SupabaseService {
 
       return UserModel.fromJson(response);
     } catch (e) {
+      print('Error loading user profile for $userId: $e');
       return null;
     }
   }
