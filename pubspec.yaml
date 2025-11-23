@@ -75,11 +75,12 @@ dependencies:
   latlong2: ^0.9.1
   
   # Calendar
-  add_2_calendar: ^2.1.0
+  add_2_calendar: ^3.0.1
   
   # Barcode/QR Code
   qr_flutter: ^4.1.0
   barcode_widget: ^2.0.1
+  mobile_scanner: ^5.2.3
   
   # Calendar
   table_calendar: ^3.1.2

@@ -202,4 +202,31 @@ class EventService {
   static bool isEventUpcoming(EventModel event) {
     return DateTime.now().isBefore(event.dateStart);
   }
+
+  // Find event by check-in code (fallback_code)
+  static Future<EventModel?> findEventByCheckInCode(String code) async {
+    try {
+      final response = await SupabaseService.client
+          .from('events')
+          .select('*')
+          .eq('fallback_code', code)
+          .maybeSingle();
+
+      if (response != null) {
+        return EventModel.fromJson(response);
+      }
+      return null;
+    } catch (e) {
+      print('Error finding event by check-in code: $e');
+      return null;
+    }
+  }
+
+  // Generate QR code data for an event
+  // Format: "EVENT:{eventId}" or just the eventId
+  static String generateQRCodeData(EventModel event) {
+    // Use event ID as QR code data
+    // You can also use: "EVENT:${event.id}" for a more structured format
+    return event.id;
+  }
 }
