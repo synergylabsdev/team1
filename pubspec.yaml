@@ -61,9 +61,6 @@ dependencies:
   
   # Page Indicator
   smooth_page_indicator: ^1.1.0
-  
-  # Deep Linking
-  app_links: ^6.1.1
 
 dev_dependencies:
   flutter_test:

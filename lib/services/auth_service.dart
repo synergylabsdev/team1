@@ -50,11 +50,10 @@ class AuthService {
         username: username,
       );
 
-      // User is created if response.user is not null
-      // Session might be null if email confirmation is required
+      // With auto-confirmation enabled, user is immediately confirmed and session is available
       if (response.user != null) {
         // Wait a bit for the profile insert to complete
-        await Future.delayed(const Duration(milliseconds: 800));
+        await Future.delayed(const Duration(milliseconds: 500));
         
         // Try to load the profile, with retries
         int retries = 3;
@@ -63,18 +62,14 @@ class AuthService {
           if (_currentUser != null) {
             break;
           }
-          await Future.delayed(const Duration(milliseconds: 500));
+          await Future.delayed(const Duration(milliseconds: 300));
           retries--;
         }
         
-        // If profile still not loaded, the user was created but profile might have issues
-        // This is okay - user can login and profile will be loaded then
-        // We return null but the signup was successful
-        print('SignUp completed. User ID: ${response.user!.id}, Profile loaded: ${_currentUser != null}');
+        print('SignUp completed. User ID: ${response.user!.id}, Session: ${response.session != null}, Profile loaded: ${_currentUser != null}');
       }
       
-      // Return the loaded user if available, otherwise null
-      // The signup screen will check if auth user exists
+      // Return the loaded user if available
       return _currentUser;
     } catch (e) {
       print('SignUp error: $e');
@@ -93,11 +88,28 @@ class AuthService {
       );
 
       if (response.user != null) {
+        // Check if user is confirmed
+        if (response.user!.emailConfirmedAt == null && 
+            response.user!.confirmedAt == null) {
+          print('Warning: User email not confirmed');
+          // Even if not confirmed, try to load profile if session exists
+        }
+        
+        // Load user profile
         await loadUserProfile();
+        
+        // If profile doesn't exist but user is authenticated, that's okay
+        // We can still return success - profile might be created later
+        if (_currentUser == null && response.session != null) {
+          print('User authenticated but profile not found. User ID: ${response.user!.id}');
+          // User is authenticated, profile might be missing - this is okay for now
+        }
+        
         return _currentUser;
       }
       return null;
     } catch (e) {
+      print('SignIn error: $e');
       rethrow;
     }
   }

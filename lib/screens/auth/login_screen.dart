@@ -3,6 +3,7 @@ import 'package:email_validator/email_validator.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/constants.dart';
 import '../../services/auth_service.dart';
+import '../../services/supabase_service.dart';
 import '../../screens/home/home_screen.dart';
 import 'signup_screen.dart';
 import 'forgot_password_screen.dart';
@@ -44,7 +45,10 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (mounted) {
-        if (user != null) {
+        // Check if user is authenticated (even if profile is null)
+        final isAuthenticated = SupabaseService.isAuthenticated;
+        
+        if (user != null || isAuthenticated) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Login successful!'),
@@ -65,10 +69,30 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       if (mounted) {
+        // Show the actual error message from Supabase
+        String errorMessage = 'Invalid email or password';
+        
+        final errorString = e.toString().toLowerCase();
+        if (errorString.contains('invalid login credentials') ||
+            errorString.contains('invalid credentials') ||
+            errorString.contains('email not confirmed') ||
+            errorString.contains('user not found')) {
+          errorMessage = 'Invalid email or password. Please check your credentials.';
+        } else if (errorString.contains('email not confirmed') ||
+                   errorString.contains('not confirmed')) {
+          errorMessage = 'Please confirm your email before logging in.';
+        } else if (errorString.contains('too many requests')) {
+          errorMessage = 'Too many login attempts. Please try again later.';
+        } else {
+          // Show the actual error for debugging
+          errorMessage = 'Error: ${e.toString()}';
+        }
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text(errorMessage),
             backgroundColor: AppTheme.errorColor,
+            duration: const Duration(seconds: 4),
           ),
         );
       }

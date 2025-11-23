@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../utils/app_theme.dart';
 import '../../services/auth_service.dart';
+import '../../services/supabase_service.dart';
 import '../auth/login_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -9,6 +10,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = AuthService().currentUser;
+    final authUser = SupabaseService.currentUser;
 
     return Scaffold(
       appBar: AppBar(
@@ -35,7 +37,7 @@ class HomeScreen extends StatelessWidget {
             const Icon(Icons.explore, size: 80, color: AppTheme.primaryColor),
             const SizedBox(height: 24),
             Text(
-              'Welcome, ${user?.firstName ?? 'User'}!',
+              'Welcome, ${user?.firstName ?? authUser?.email ?? 'User'}!',
               style: Theme.of(context).textTheme.displaySmall,
             ),
             const SizedBox(height: 16),

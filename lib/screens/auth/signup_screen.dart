@@ -4,6 +4,7 @@ import '../../utils/app_theme.dart';
 import '../../utils/constants.dart';
 import '../../services/auth_service.dart';
 import '../../services/supabase_service.dart';
+import '../../screens/home/home_screen.dart';
 import 'login_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -55,36 +56,37 @@ class _SignUpScreenState extends State<SignUpScreen> {
       );
 
       if (mounted) {
-        // Check if user was created in Supabase auth
-        // Note: If email confirmation is enabled, currentUser might be null
-        // but the user is still created in the database
+        // With auto-confirmation enabled, user is immediately authenticated
         final authUser = SupabaseService.currentUser;
+        final isAuthenticated = SupabaseService.isAuthenticated;
 
-        // If we have a user object or auth user, signup was successful
-        if (user != null || authUser != null) {
+        // If we have a user object or authenticated user, signup was successful
+        if (user != null || authUser != null || isAuthenticated) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text(
-                'Account created successfully! Please login to continue.',
-              ),
+              content: Text('Account created successfully!'),
               backgroundColor: AppTheme.successColor,
-              duration: Duration(seconds: 3),
+              duration: Duration(seconds: 2),
             ),
           );
-          // Navigate to login screen
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const LoginScreen()),
-          );
+
+          // If user is authenticated, go directly to home screen
+          // Otherwise, go to login screen
+          if (isAuthenticated && user != null) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const HomeScreen()),
+            );
+          } else {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const LoginScreen()),
+            );
+          }
         } else {
-          // Even if user/profile loading failed, if no exception was thrown,
-          // the user might still be created (check Supabase dashboard)
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text(
-                'Account creation in progress. Please check your email and try logging in.',
-              ),
-              backgroundColor: AppTheme.warningColor,
-              duration: Duration(seconds: 4),
+              content: Text('Account created! Please login to continue.'),
+              backgroundColor: AppTheme.successColor,
+              duration: Duration(seconds: 3),
             ),
           );
           Navigator.of(context).pushReplacement(

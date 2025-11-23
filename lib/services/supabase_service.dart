@@ -9,10 +9,6 @@ class SupabaseService {
     await Supabase.initialize(
       url: AppConstants.supabaseUrl,
       anonKey: AppConstants.supabaseAnonKey,
-      authOptions: FlutterAuthClientOptions(
-        authFlowType: AuthFlowType.pkce,
-        redirectTo: AppConstants.redirectUrl,
-      ),
     );
     _client = Supabase.instance.client;
   }
@@ -42,11 +38,13 @@ class SupabaseService {
         'last_name': lastName,
         'username': username,
       },
+      emailRedirectTo: null, // No email redirect needed for auto-confirmation
     );
 
     if (response.user != null) {
       try {
         // Create user profile in users table
+        // With auto-confirmation enabled, user is immediately confirmed
         await client.from('users').insert({
           'id': response.user!.id,
           'first_name': firstName,
@@ -71,10 +69,22 @@ class SupabaseService {
     required String email,
     required String password,
   }) async {
-    return await client.auth.signInWithPassword(
-      email: email,
-      password: password,
-    );
+    try {
+      final response = await client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+      
+      print('SignIn response - User: ${response.user?.id}, Session: ${response.session != null}');
+      if (response.user != null) {
+        print('User email confirmed: ${response.user!.emailConfirmedAt != null}');
+      }
+      
+      return response;
+    } catch (e) {
+      print('Supabase signIn error: $e');
+      rethrow;
+    }
   }
 
   static Future<void> signOut() async {

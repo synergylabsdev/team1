@@ -15,6 +15,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _emailController = TextEditingController();
   bool _isLoading = false;
   bool _emailSent = false;
+  
 
   @override
   void dispose() {
