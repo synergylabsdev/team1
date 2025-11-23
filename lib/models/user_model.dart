@@ -45,7 +45,6 @@ class UserModel {
   final int points;
   final TierStatus tierStatus;
   final DateTime createdAt;
-  final DateTime updatedAt;
 
   UserModel({
     required this.id,
@@ -59,7 +58,6 @@ class UserModel {
     this.points = 0,
     this.tierStatus = TierStatus.bronze,
     required this.createdAt,
-    required this.updatedAt,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -70,16 +68,13 @@ class UserModel {
       username: json['username'] as String,
       email: json['email'] as String,
       phone: json['phone'] as String?,
-      dob: json['dob'] != null
-          ? DateTime.parse(json['dob'] as String)
-          : null,
+      dob: json['dob'] != null ? DateTime.parse(json['dob'] as String) : null,
       profilePicture: json['profile_picture'] as String?,
       points: (json['points'] as int?) ?? 0,
       tierStatus: json['tier_status'] != null
           ? TierStatus.fromString(json['tier_status'] as String)
           : TierStatus.bronze,
       createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
     );
   }
 
@@ -96,7 +91,6 @@ class UserModel {
       'points': points,
       'tier_status': tierStatus.value,
       'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
     };
   }
 
@@ -126,8 +120,6 @@ class UserModel {
       points: points ?? this.points,
       tierStatus: tierStatus ?? this.tierStatus,
       createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 }
-

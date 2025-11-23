@@ -74,12 +74,16 @@ class SupabaseService {
         email: email,
         password: password,
       );
-      
-      print('SignIn response - User: ${response.user?.id}, Session: ${response.session != null}');
+
+      print(
+        'SignIn response - User: ${response.user?.id}, Session: ${response.session != null}',
+      );
       if (response.user != null) {
-        print('User email confirmed: ${response.user!.emailConfirmedAt != null}');
+        print(
+          'User email confirmed: ${response.user!.emailConfirmedAt != null}',
+        );
       }
-      
+
       return response;
     } catch (e) {
       print('Supabase signIn error: $e');
@@ -139,19 +143,22 @@ class SupabaseService {
     if (phone != null) updateData['phone'] = phone;
     if (dob != null) updateData['dob'] = dob.toIso8601String();
     if (profilePicture != null) updateData['profile_picture'] = profilePicture;
-    updateData['updated_at'] = DateTime.now().toIso8601String();
 
     // If user doesn't exist, create it with upsert
     if (existingUser == null) {
       // Get auth user to get email
       final authUser = currentUser;
       final userMetadata = authUser?.userMetadata;
-      
+
       // Use provided values or fallback to metadata/defaults
       updateData['id'] = userId;
       updateData['first_name'] = firstName ?? userMetadata?['first_name'] ?? '';
       updateData['last_name'] = lastName ?? userMetadata?['last_name'] ?? '';
-      updateData['username'] = username ?? userMetadata?['username'] ?? authUser?.email?.split('@')[0] ?? '';
+      updateData['username'] =
+          username ??
+          userMetadata?['username'] ??
+          authUser?.email?.split('@')[0] ??
+          '';
       updateData['email'] = authUser?.email ?? '';
       updateData['points'] = 0;
       updateData['tier_status'] = 'Bronze';
