@@ -264,6 +264,9 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         dob: _selectedDate,
       );
 
+      // Reload user profile to get updated data
+      await AuthService().loadUserProfile();
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

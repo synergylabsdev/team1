@@ -98,11 +98,36 @@ class AuthService {
         // Load user profile
         await loadUserProfile();
         
-        // If profile doesn't exist but user is authenticated, that's okay
-        // We can still return success - profile might be created later
+        // If profile doesn't exist but user is authenticated, create it
         if (_currentUser == null && response.session != null) {
-          print('User authenticated but profile not found. User ID: ${response.user!.id}');
-          // User is authenticated, profile might be missing - this is okay for now
+          print('User authenticated but profile not found. Creating profile for User ID: ${response.user!.id}');
+          
+          // Get user metadata from auth
+          final userMetadata = response.user!.userMetadata;
+          final firstName = userMetadata?['first_name'] as String? ?? '';
+          final lastName = userMetadata?['last_name'] as String? ?? '';
+          final username = userMetadata?['username'] as String? ?? email.split('@')[0];
+          
+          // Create user profile in users table
+          try {
+            await SupabaseService.client.from('users').insert({
+              'id': response.user!.id,
+              'first_name': firstName,
+              'last_name': lastName,
+              'username': username,
+              'email': email,
+              'points': 0,
+              'tier_status': 'Bronze',
+            });
+            
+            // Reload profile after creation
+            await loadUserProfile();
+            print('User profile created successfully');
+          } catch (e) {
+            print('Error creating user profile during sign in: $e');
+            // If insert fails (e.g., user already exists), try to load again
+            await loadUserProfile();
+          }
         }
         
         return _currentUser;
@@ -141,9 +166,60 @@ class AuthService {
     DateTime? dob,
     String? profilePicture,
   }) async {
+    final authUser = SupabaseService.currentUser;
+    if (authUser == null) {
+      throw Exception('User not authenticated');
+    }
+
+    // First, ensure user exists in users table
+    if (_currentUser == null) {
+      // Try to load profile first
+      await loadUserProfile();
+      
+      // If still null, create the user profile
+      if (_currentUser == null) {
+        final userMetadata = authUser.userMetadata;
+        final existingFirstName = firstName ?? userMetadata?['first_name'] as String? ?? '';
+        final existingLastName = lastName ?? userMetadata?['last_name'] as String? ?? '';
+        final existingUsername = username ?? userMetadata?['username'] as String? ?? authUser.email?.split('@')[0] ?? '';
+        
+        try {
+          await SupabaseService.client.from('users').insert({
+            'id': authUser.id,
+            'first_name': existingFirstName,
+            'last_name': existingLastName,
+            'username': existingUsername,
+            'email': authUser.email ?? '',
+            'points': 0,
+            'tier_status': 'Bronze',
+          });
+          
+          // Reload profile after creation
+          await loadUserProfile();
+          print('User profile created during update');
+        } catch (e) {
+          print('Error creating user profile during update: $e');
+          // If insert fails, try to load again (might have been created by another process)
+          await loadUserProfile();
+        }
+      }
+    }
+
+    // Now update the profile
     if (_currentUser != null) {
       _currentUser = await SupabaseService.updateUserProfile(
         userId: _currentUser!.id,
+        firstName: firstName,
+        lastName: lastName,
+        username: username,
+        phone: phone,
+        dob: dob,
+        profilePicture: profilePicture,
+      );
+    } else {
+      // If we still don't have a current user, try to update directly using auth user ID
+      _currentUser = await SupabaseService.updateUserProfile(
+        userId: authUser.id,
         firstName: firstName,
         lastName: lastName,
         username: username,

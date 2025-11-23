@@ -124,6 +124,14 @@ class SupabaseService {
     DateTime? dob,
     String? profilePicture,
   }) async {
+    // First, check if user exists
+    UserModel? existingUser;
+    try {
+      existingUser = await getUserProfile(userId);
+    } catch (e) {
+      print('User profile not found, will create: $e');
+    }
+
     final updateData = <String, dynamic>{};
     if (firstName != null) updateData['first_name'] = firstName;
     if (lastName != null) updateData['last_name'] = lastName;
@@ -133,13 +141,40 @@ class SupabaseService {
     if (profilePicture != null) updateData['profile_picture'] = profilePicture;
     updateData['updated_at'] = DateTime.now().toIso8601String();
 
-    final response = await client
-        .from('users')
-        .update(updateData)
-        .eq('id', userId)
-        .select()
-        .single();
+    // If user doesn't exist, create it with upsert
+    if (existingUser == null) {
+      // Get auth user to get email
+      final authUser = currentUser;
+      final userMetadata = authUser?.userMetadata;
+      
+      // Use provided values or fallback to metadata/defaults
+      updateData['id'] = userId;
+      updateData['first_name'] = firstName ?? userMetadata?['first_name'] ?? '';
+      updateData['last_name'] = lastName ?? userMetadata?['last_name'] ?? '';
+      updateData['username'] = username ?? userMetadata?['username'] ?? authUser?.email?.split('@')[0] ?? '';
+      updateData['email'] = authUser?.email ?? '';
+      updateData['points'] = 0;
+      updateData['tier_status'] = 'Bronze';
+      updateData['created_at'] = DateTime.now().toIso8601String();
 
-    return UserModel.fromJson(response);
+      // Use upsert to insert or update
+      final response = await client
+          .from('users')
+          .upsert(updateData, onConflict: 'id')
+          .select()
+          .single();
+
+      return UserModel.fromJson(response);
+    } else {
+      // User exists, just update
+      final response = await client
+          .from('users')
+          .update(updateData)
+          .eq('id', userId)
+          .select()
+          .single();
+
+      return UserModel.fromJson(response);
+    }
   }
 }
