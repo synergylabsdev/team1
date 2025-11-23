@@ -8,11 +8,7 @@ class CheckInScreen extends StatefulWidget {
   final EventModel event;
   final VoidCallback? onCheckInComplete;
 
-  const CheckInScreen({
-    super.key,
-    required this.event,
-    this.onCheckInComplete,
-  });
+  const CheckInScreen({super.key, required this.event, this.onCheckInComplete});
 
   @override
   State<CheckInScreen> createState() => _CheckInScreenState();
@@ -44,7 +40,9 @@ class _CheckInScreenState extends State<CheckInScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Check-in successful! You earned $_pointsEarned points!'),
+            content: Text(
+              'Check-in successful! You earned $_pointsEarned points!',
+            ),
             backgroundColor: AppTheme.successColor,
             duration: const Duration(seconds: 3),
           ),
@@ -71,9 +69,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Check In'),
-      ),
+      appBar: AppBar(title: const Text('Check In')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -94,24 +90,25 @@ class _CheckInScreenState extends State<CheckInScreen> {
                       Text(
                         widget.event.location,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: AppTheme.textSecondary,
-                            ),
+                          color: AppTheme.textSecondary,
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 32),
-              
+
               // Barcode/QR Code Display
-              if (widget.event.qrCodeUrl != null)
-                Image.network(
-                  widget.event.qrCodeUrl!,
-                  height: 200,
-                  width: 200,
-                )
-              else if (widget.event.fallbackCode != null)
+              // if (widget.event.qrCodeUrl != null)
+              //   Image.network(
+              //     widget.event.qrCodeUrl!,
+              //     height: 200,
+              //     width: 200,
+              //   )
+              // else
+              if (widget.event.fallbackCode != null)
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
@@ -134,7 +131,8 @@ class _CheckInScreenState extends State<CheckInScreen> {
                       const SizedBox(height: 8),
                       Text(
                         widget.event.fallbackCode!,
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(
                               fontFamily: 'monospace',
                               letterSpacing: 2,
                             ),
@@ -142,9 +140,9 @@ class _CheckInScreenState extends State<CheckInScreen> {
                     ],
                   ),
                 ),
-              
+
               const SizedBox(height: 32),
-              
+
               // Instructions
               Card(
                 color: AppTheme.primaryColor.withOpacity(0.1),
@@ -152,10 +150,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     children: [
-                      Icon(
-                        Icons.info_outline,
-                        color: AppTheme.primaryColor,
-                      ),
+                      Icon(Icons.info_outline, color: AppTheme.primaryColor),
                       const SizedBox(height: 8),
                       Text(
                         'Show this code to event staff to check in',
@@ -166,9 +161,9 @@ class _CheckInScreenState extends State<CheckInScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 32),
-              
+
               // Manual Check-In Button
               SizedBox(
                 width: double.infinity,
@@ -184,7 +179,9 @@ class _CheckInScreenState extends State<CheckInScreen> {
                           width: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
                           ),
                         )
                       : const Text(
@@ -195,11 +192,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
               ),
             ] else ...[
               // Success State
-              Icon(
-                Icons.check_circle,
-                size: 80,
-                color: AppTheme.successColor,
-              ),
+              Icon(Icons.check_circle, size: 80, color: AppTheme.successColor),
               const SizedBox(height: 24),
               Text(
                 'Check-In Complete!',
@@ -218,7 +211,8 @@ class _CheckInScreenState extends State<CheckInScreen> {
                       const SizedBox(height: 8),
                       Text(
                         '$_pointsEarned Points',
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        style: Theme.of(context).textTheme.headlineMedium
+                            ?.copyWith(
                               color: AppTheme.primaryColor,
                               fontWeight: FontWeight.bold,
                             ),
@@ -244,4 +238,3 @@ class _CheckInScreenState extends State<CheckInScreen> {
     );
   }
 }
-

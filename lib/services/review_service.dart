@@ -24,13 +24,8 @@ class ReviewService {
   static Future<List<String>> getTagIdsFromNames(List<String> tagNames) async {
     try {
       final tags = await getAllTags();
-      final tagMap = {
-        for (var tag in tags) tag.name.toLowerCase(): tag.id,
-      };
-      return tagNames
-          .map((name) => tagMap[name.toLowerCase()])
-          .whereType<String>()
-          .toList();
+      final tagMap = {for (var tag in tags) tag.name.toLowerCase(): tag.id};
+      return tagNames.map((name) => tagMap[name]).whereType<String>().toList();
     } catch (e) {
       print('Error getting tag IDs: $e');
       return [];
@@ -88,14 +83,11 @@ class ReviewService {
 
       // Create review_tags entries
       if (tagIds.isNotEmpty) {
-        final reviewTagsData = tagIds.map((tagId) => {
-          'review_id': reviewId,
-          'tags_id': tagId,
-        }).toList();
+        final reviewTagsData = tagIds
+            .map((tagId) => {'review_id': reviewId, 'tags_id': tagId})
+            .toList();
 
-        await SupabaseService.client
-            .from('review_tags')
-            .insert(reviewTagsData);
+        await SupabaseService.client.from('review_tags').insert(reviewTagsData);
       }
 
       // Award points
@@ -109,7 +101,7 @@ class ReviewService {
 
         // Reload user profile
         await AuthService().loadUserProfile();
-        
+
         // Check and unlock achievements
         await AchievementsService.checkAndUnlockAchievements(user.id);
       }
@@ -126,7 +118,9 @@ class ReviewService {
     try {
       final response = await SupabaseService.client
           .from('reviews')
-          .select('*, users(first_name, last_name, username), review_tags(tags(*))')
+          .select(
+            '*, users(first_name, last_name, username), review_tags(tags(*))',
+          )
           .eq('event_id', eventId)
           .order('created_at', ascending: false);
 
@@ -174,4 +168,3 @@ class ReviewService {
     return ReviewModel.fromJson(reviewJson);
   }
 }
-

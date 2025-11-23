@@ -63,6 +63,22 @@ class PermissionsService {
     return status.isGranted;
   }
 
+  // Calendar Permission
+  static Future<bool> ensureCalendarPermission() async {
+    final status = await ph.Permission.calendar.status;
+    if (status.isGranted || status.isLimited) {
+      return true;
+    }
+
+    final result = await ph.Permission.calendar.request();
+    if (result.isPermanentlyDenied) {
+      await ph.openAppSettings();
+      return false;
+    }
+
+    return result.isGranted || result.isLimited;
+  }
+
   // Open App Settings (for when permission is permanently denied)
   static Future<bool> openAppSettings() async {
     return await ph.openAppSettings();

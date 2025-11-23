@@ -5,7 +5,11 @@ class TagModel {
   TagModel({required this.id, required this.name});
 
   factory TagModel.fromJson(Map<String, dynamic> json) {
-    return TagModel(id: json['id'].toString(), name: json['name'] as String);
+    final rawId = json['id'];
+    if (rawId == null) {
+      throw FormatException('Tag id is missing in JSON payload.');
+    }
+    return TagModel(id: rawId.toString(), name: json['name'] as String);
   }
 
   Map<String, dynamic> toJson() {

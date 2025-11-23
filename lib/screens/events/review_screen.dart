@@ -92,7 +92,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
         eventId: widget.event.id,
         brandId: widget.brandId,
         rating: _rating,
-        tags: _selectedTags.toList(),
+        tagNames: _selectedTags.toList(),
         comment: _commentController.text.trim().isEmpty
             ? null
             : _commentController.text.trim(),
@@ -102,9 +102,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) => ReviewConfirmationScreen(
-              pointsEarned: 10,
-            ),
+            builder: (_) => ReviewConfirmationScreen(pointsEarned: 10),
           ),
         );
         widget.onReviewSubmitted?.call();
@@ -127,9 +125,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Leave a Review'),
-      ),
+      appBar: AppBar(title: const Text('Leave a Review')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -150,21 +146,18 @@ class _ReviewScreenState extends State<ReviewScreen> {
                     Text(
                       widget.event.location,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppTheme.textSecondary,
-                          ),
+                        color: AppTheme.textSecondary,
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Rating
-            Text(
-              'Rating',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text('Rating', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -185,9 +178,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 );
               }),
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             // Tags
             Text(
               'Tags (select all that apply)',
@@ -197,35 +190,35 @@ class _ReviewScreenState extends State<ReviewScreen> {
             _isLoadingTags
                 ? const Center(child: CircularProgressIndicator())
                 : _availableTags.isEmpty
-                    ? Text(
-                        'No tags available',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: AppTheme.textSecondary,
-                            ),
-                      )
-                    : Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: _availableTags.map((tag) {
-                          final isSelected = _selectedTags.contains(tag.name);
-                          return FilterChip(
-                            label: Text(tag.name),
-                            selected: isSelected,
-                            onSelected: (selected) {
-                              setState(() {
-                                if (selected) {
-                                  _selectedTags.add(tag.name);
-                                } else {
-                                  _selectedTags.remove(tag.name);
-                                }
-                              });
-                            },
-                          );
-                        }).toList(),
-                      ),
-            
+                ? Text(
+                    'No tags available',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
+                  )
+                : Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _availableTags.map((tag) {
+                      final isSelected = _selectedTags.contains(tag.name);
+                      return FilterChip(
+                        label: Text(tag.name),
+                        selected: isSelected,
+                        onSelected: (selected) {
+                          setState(() {
+                            if (selected) {
+                              _selectedTags.add(tag.name);
+                            } else {
+                              _selectedTags.remove(tag.name);
+                            }
+                          });
+                        },
+                      );
+                    }).toList(),
+                  ),
+
             const SizedBox(height: 32),
-            
+
             // Comment
             Text(
               'Additional Comments (Optional)',
@@ -240,9 +233,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 border: OutlineInputBorder(),
               ),
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             // Submit Button
             SizedBox(
               width: double.infinity,
@@ -257,7 +250,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
                         ),
                       )
                     : const Text('Submit Review'),
@@ -273,10 +268,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
 class ReviewConfirmationScreen extends StatelessWidget {
   final int pointsEarned;
 
-  const ReviewConfirmationScreen({
-    super.key,
-    required this.pointsEarned,
-  });
+  const ReviewConfirmationScreen({super.key, required this.pointsEarned});
 
   @override
   Widget build(BuildContext context) {
@@ -287,11 +279,7 @@ class ReviewConfirmationScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.check_circle,
-                size: 80,
-                color: AppTheme.successColor,
-              ),
+              Icon(Icons.check_circle, size: 80, color: AppTheme.successColor),
               const SizedBox(height: 24),
               Text(
                 'Review Submitted',
@@ -310,7 +298,8 @@ class ReviewConfirmationScreen extends StatelessWidget {
                       const SizedBox(height: 8),
                       Text(
                         '$pointsEarned Points',
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        style: Theme.of(context).textTheme.headlineMedium
+                            ?.copyWith(
                               color: AppTheme.primaryColor,
                               fontWeight: FontWeight.bold,
                             ),
@@ -336,4 +325,3 @@ class ReviewConfirmationScreen extends StatelessWidget {
     );
   }
 }
-

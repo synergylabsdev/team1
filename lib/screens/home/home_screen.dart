@@ -179,7 +179,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('SampleFinder'),
+        title: const Text('Sample Finder'),
         bottom: TabBar(
           controller: _tabController,
           tabs: const [

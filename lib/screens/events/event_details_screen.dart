@@ -9,6 +9,7 @@ import '../../services/check_in_service.dart';
 import '../../services/favorite_service.dart';
 import '../../services/supabase_service.dart';
 import '../../utils/app_theme.dart';
+import '../../utils/permissions_service.dart';
 import 'check_in_screen.dart';
 import 'trivia_game_screen.dart';
 import 'review_screen.dart';
@@ -131,6 +132,19 @@ class _EventDetailsSheetState extends State<EventDetailsSheet> {
 
   Future<void> _addToCalendar() async {
     try {
+      final hasPermission = await PermissionsService.ensureCalendarPermission();
+      if (!hasPermission) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Calendar permission is required to save events.'),
+              backgroundColor: AppTheme.errorColor,
+            ),
+          );
+        }
+        return;
+      }
+
       final event = Event(
         title: '${_brand?.name ?? 'Event'} - ${widget.event.storeName}',
         description: widget.event.description ?? '',
@@ -353,6 +367,9 @@ class _EventDetailsSheetState extends State<EventDetailsSheet> {
                                       label: const Text('Already Checked In'),
                                     ),
                                   ),
+
+                                if (isLive && !_hasCheckedIn)
+                                  const SizedBox(width: 8),
 
                                 if (isLive && !_hasCheckedIn)
                                   const SizedBox(width: 8),

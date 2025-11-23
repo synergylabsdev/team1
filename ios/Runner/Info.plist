@@ -47,6 +47,8 @@
 	<true/>
 	<key>GMSApiKey</key>
 	<string>REPLACE_WITH_YOUR_IOS_GOOGLE_MAPS_KEY</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Samplefinder needs calendar access to add event reminders for you.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Samplefinder uses your location to find nearby events relevant to you.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>

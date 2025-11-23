@@ -8,7 +8,6 @@ class ReviewModel {
   final String? comment;
   final int pointsEarned;
   final DateTime createdAt;
-  final DateTime updatedAt;
 
   ReviewModel({
     required this.id,
@@ -20,7 +19,6 @@ class ReviewModel {
     this.comment,
     this.pointsEarned = 0,
     required this.createdAt,
-    required this.updatedAt,
   });
 
   factory ReviewModel.fromJson(Map<String, dynamic> json) {
@@ -34,7 +32,6 @@ class ReviewModel {
       comment: json['comment'] as String?,
       pointsEarned: (json['points_earned'] as int?) ?? 0,
       createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
     );
   }
 
@@ -49,7 +46,6 @@ class ReviewModel {
       'comment': comment,
       'points_earned': pointsEarned,
       'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
     };
   }
 
@@ -75,8 +71,6 @@ class ReviewModel {
       comment: comment ?? this.comment,
       pointsEarned: pointsEarned ?? this.pointsEarned,
       createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 }
-
