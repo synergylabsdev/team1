@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../utils/app_theme.dart';
 import '../../services/auth_service.dart';
 import '../../services/supabase_service.dart';
-import '../auth/login_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -15,20 +14,6 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('SampleFinder'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await AuthService().signOut();
-              if (context.mounted) {
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                  (route) => false,
-                );
-              }
-            },
-          ),
-        ],
       ),
       body: Center(
         child: Column(

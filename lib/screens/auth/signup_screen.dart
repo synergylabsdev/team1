@@ -4,7 +4,7 @@ import '../../utils/app_theme.dart';
 import '../../utils/constants.dart';
 import '../../services/auth_service.dart';
 import '../../services/supabase_service.dart';
-import '../../screens/home/home_screen.dart';
+import '../../screens/main/main_screen.dart';
 import 'login_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -70,11 +70,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
             ),
           );
 
-          // If user is authenticated, go directly to home screen
+          // If user is authenticated, go directly to main screen
           // Otherwise, go to login screen
           if (isAuthenticated && user != null) {
             Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => const HomeScreen()),
+              MaterialPageRoute(builder: (_) => const MainScreen()),
             );
           } else {
             Navigator.of(context).pushReplacement(

@@ -4,7 +4,7 @@ import '../../utils/app_theme.dart';
 import '../../utils/constants.dart';
 import '../../services/auth_service.dart';
 import '../../services/supabase_service.dart';
-import '../../screens/home/home_screen.dart';
+import '../../screens/main/main_screen.dart';
 import 'signup_screen.dart';
 import 'forgot_password_screen.dart';
 
@@ -56,7 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           );
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const HomeScreen()),
+            MaterialPageRoute(builder: (_) => const MainScreen()),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(

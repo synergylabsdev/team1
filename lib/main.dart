@@ -4,7 +4,7 @@ import 'services/supabase_service.dart';
 import 'services/auth_service.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/auth/login_screen.dart';
-import 'screens/home/home_screen.dart';
+import 'screens/main/main_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -71,9 +71,9 @@ class _AppInitializerState extends State<AppInitializer> {
           MaterialPageRoute(builder: (_) => const LoginScreen()),
         );
       } else {
-        // Navigate to home screen
+        // Navigate to main screen with bottom nav
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
+          MaterialPageRoute(builder: (_) => const MainScreen()),
         );
       }
     }
