@@ -25,7 +25,8 @@ class EventService {
         query = query.eq('status', status.value);
       } else {
         // Only show active and live events by default
-        query = query.in_('status', ['Active', 'Live']);
+        // Using OR fallback instead of in_ for compatibility
+        query = query.or('status.eq.Active,status.eq.Live');
       }
 
       // Filter by date range
@@ -58,7 +59,8 @@ class EventService {
             event.latitude,
             event.longitude,
           );
-          final distanceMiles = distance * 0.000621371; // Convert meters to miles
+          final distanceMiles =
+              distance * 0.000621371; // Convert meters to miles
           return distanceMiles <= radiusMiles;
         }).toList();
       }
@@ -170,4 +172,3 @@ class EventService {
     return DateTime.now().isBefore(event.dateStart);
   }
 }
-
