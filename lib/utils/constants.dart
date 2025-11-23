@@ -6,6 +6,10 @@ class AppConstants {
   static const String supabaseUrl = 'https://dplndpkjeqnmnwtrpprg.supabase.co';
   static const String supabaseAnonKey =
       'sb_secret_dQDrD6q0lfP3i0srFVOdAQ_tw7XMFjR';
+  
+  // Deep Link Configuration
+  static const String deepLinkScheme = 'samplefinder';
+  static const String redirectUrl = 'samplefinder://auth-callback';
 
   // Shared Preferences Keys
   static const String keyOnboardingCompleted = 'onboarding_completed';
