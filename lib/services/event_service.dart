@@ -16,18 +16,16 @@ class EventService {
     EventStatus? status,
   }) async {
     try {
-      var query = SupabaseService.client
-          .from('events')
-          .select('*, brands(*), event_categories(categories(*))');
+      // Start with a simple query - don't join brands initially to avoid issues
+      var query = SupabaseService.client.from('events').select('*');
 
-      // Filter by status
+      // Filter by status - show upcoming events (date_end >= now) by default
       if (status != null) {
         query = query.eq('status', status.value);
-      } else {
-        // Only show active and live events by default
-        // Using OR fallback instead of in_ for compatibility
-        query = query.or('status.eq.Active,status.eq.Live');
       }
+
+      // Always filter to show events that haven't ended yet
+      query = query.gte('date_end', DateTime.now().toIso8601String());
 
       // Filter by date range
       if (startDate != null) {
@@ -38,6 +36,8 @@ class EventService {
       }
 
       final response = await query;
+
+      print('Events fetched: ${response.length}');
 
       List<EventModel> events = [];
       for (var item in response) {
