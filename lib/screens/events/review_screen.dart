@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/event_model.dart';
+import '../../models/tag_model.dart';
 import '../../services/review_service.dart';
 import '../../utils/app_theme.dart';
 
@@ -24,11 +25,41 @@ class _ReviewScreenState extends State<ReviewScreen> {
   final Set<String> _selectedTags = {};
   final _commentController = TextEditingController();
   bool _isSubmitting = false;
+  List<TagModel> _availableTags = [];
+  bool _isLoadingTags = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTags();
+  }
 
   @override
   void dispose() {
     _commentController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadTags() async {
+    try {
+      final tags = await ReviewService.getAllTags();
+      setState(() {
+        _availableTags = tags;
+        _isLoadingTags = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingTags = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading tags: ${e.toString()}'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _submitReview() async {
@@ -61,7 +92,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
         eventId: widget.event.id,
         brandId: widget.brandId,
         rating: _rating,
-        tags: _selectedTags.toList(),
+        tagNames: _selectedTags.toList(),
         comment: _commentController.text.trim().isEmpty
             ? null
             : _commentController.text.trim(),
@@ -163,26 +194,35 @@ class _ReviewScreenState extends State<ReviewScreen> {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: ReviewService.reviewTags.map((tag) {
-                final isSelected = _selectedTags.contains(tag);
-                return FilterChip(
-                  label: Text(tag),
-                  selected: isSelected,
-                  onSelected: (selected) {
-                    setState(() {
-                      if (selected) {
-                        _selectedTags.add(tag);
-                      } else {
-                        _selectedTags.remove(tag);
-                      }
-                    });
-                  },
-                );
-              }).toList(),
-            ),
+            _isLoadingTags
+                ? const Center(child: CircularProgressIndicator())
+                : _availableTags.isEmpty
+                    ? Text(
+                        'No tags available',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: AppTheme.textSecondary,
+                            ),
+                      )
+                    : Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _availableTags.map((tag) {
+                          final isSelected = _selectedTags.contains(tag.name);
+                          return FilterChip(
+                            label: Text(tag.name),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              setState(() {
+                                if (selected) {
+                                  _selectedTags.add(tag.name);
+                                } else {
+                                  _selectedTags.remove(tag.name);
+                                }
+                              });
+                            },
+                          );
+                        }).toList(),
+                      ),
             
             const SizedBox(height: 32),
             
