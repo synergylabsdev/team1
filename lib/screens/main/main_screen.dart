@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import '../home/home_screen.dart';
 import '../profile/profile_screen.dart';
 import '../settings/settings_screen.dart';
+import '../events/calendar_view_screen.dart';
+import '../favorites/favorites_screen.dart';
+import '../../utils/permissions_service.dart';
+import 'package:geolocator/geolocator.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -12,12 +16,32 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+  Position? _currentPosition;
 
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const ProfileScreen(),
-    const SettingsScreen(),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _getCurrentLocation();
+  }
+
+  Future<void> _getCurrentLocation() async {
+    try {
+      final position = await PermissionsService.getCurrentLocation();
+      setState(() {
+        _currentPosition = position;
+      });
+    } catch (e) {
+      // Location not available
+    }
+  }
+
+  List<Widget> get _screens => [
+        HomeScreen(),
+        CalendarViewScreen(currentPosition: _currentPosition),
+        FavoritesScreen(),
+        ProfileScreen(),
+        SettingsScreen(),
+      ];
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +62,16 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icon(Icons.home_outlined),
             selectedIcon: Icon(Icons.home),
             label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.calendar_today_outlined),
+            selectedIcon: Icon(Icons.calendar_today),
+            label: 'Calendar',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.favorite_border),
+            selectedIcon: Icon(Icons.favorite),
+            label: 'Favorites',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),

@@ -40,13 +40,11 @@ class EventService {
       final response = await query;
 
       List<EventModel> events = [];
-      if (response != null) {
-        for (var item in response) {
-          try {
-            events.add(EventModel.fromJson(item));
-          } catch (e) {
-            print('Error parsing event: $e');
-          }
+      for (var item in response) {
+        try {
+          events.add(EventModel.fromJson(item));
+        } catch (e) {
+          print('Error parsing event: $e');
         }
       }
 

@@ -38,9 +38,11 @@ class FavoriteService {
     }
   }
 
+
   // Remove brand from favorites
   static Future<void> removeFavorite(String brandId) async {
     try {
+      
       final user = SupabaseService.currentUser;
       if (user == null) {
         throw Exception('User not authenticated');

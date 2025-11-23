@@ -1,8 +1,7 @@
 import '../models/check_in_model.dart';
-import '../models/event_model.dart';
-import '../models/user_model.dart';
 import 'supabase_service.dart';
 import 'auth_service.dart';
+import 'achievements_service.dart';
 
 class CheckInService {
   // Check in to an event
@@ -52,6 +51,9 @@ class CheckInService {
 
         // Reload user profile
         await AuthService().loadUserProfile();
+        
+        // Check and unlock achievements
+        await AchievementsService.checkAndUnlockAchievements(user.id);
       }
 
       return CheckInModel.fromJson(response);

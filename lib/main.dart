@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'utils/app_theme.dart';
 import 'services/supabase_service.dart';
 import 'services/auth_service.dart';
+import 'services/notification_service.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/main/main_screen.dart';
@@ -11,6 +12,9 @@ void main() async {
   
   // Initialize Supabase
   await SupabaseService.initialize();
+  
+  // Initialize Notifications
+  await NotificationService.initialize();
   
   // Initialize Auth Service
   await AuthService().initialize();
@@ -82,6 +86,7 @@ class _AppInitializerState extends State<AppInitializer> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

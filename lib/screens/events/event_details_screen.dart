@@ -7,9 +7,12 @@ import '../../models/brand_model.dart';
 import '../../services/event_service.dart';
 import '../../services/check_in_service.dart';
 import '../../services/favorite_service.dart';
+import '../../services/notification_service.dart';
 import '../../services/supabase_service.dart';
 import '../../utils/app_theme.dart';
 import 'check_in_screen.dart';
+import 'trivia_game_screen.dart';
+import 'review_screen.dart';
 
 class EventDetailsSheet extends StatefulWidget {
   final EventModel event;
@@ -141,10 +144,13 @@ class _EventDetailsSheetState extends State<EventDetailsSheet> {
 
       await Add2Calendar.addEvent2Cal(event);
       
+      // Schedule push notifications
+      await NotificationService.scheduleEventReminders(widget.event);
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Event added to calendar'),
+            content: Text('Event added to calendar with reminders'),
             backgroundColor: AppTheme.successColor,
           ),
         );
@@ -344,27 +350,78 @@ class _EventDetailsSheetState extends State<EventDetailsSheet> {
                             
                             const SizedBox(height: 8),
                             
-                            // Check-In Button
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton.icon(
-                                onPressed: _hasCheckedIn ? null : _handleCheckIn,
-                                icon: Icon(_hasCheckedIn ? Icons.check_circle : Icons.qr_code),
-                                label: Text(
-                                  _hasCheckedIn
-                                      ? 'Already Checked In'
-                                      : isLive
-                                          ? 'Check In'
-                                          : 'Check-In Available During Event',
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
-                                  backgroundColor: isLive && !_hasCheckedIn
-                                      ? AppTheme.successColor
-                                      : null,
+                            // Action Buttons Row
+                            Row(
+                              children: [
+                                if (isLive && !_hasCheckedIn)
+                                  Expanded(
+                                    child: ElevatedButton.icon(
+                                      onPressed: _handleCheckIn,
+                                      icon: const Icon(Icons.qr_code),
+                                      label: const Text('Check In'),
+                                      style: ElevatedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(vertical: 16),
+                                        backgroundColor: AppTheme.successColor,
+                                      ),
+                                    ),
+                                  )
+                                else if (_hasCheckedIn)
+                                  Expanded(
+                                    child: OutlinedButton.icon(
+                                      onPressed: null,
+                                      icon: const Icon(Icons.check_circle),
+                                      label: const Text('Already Checked In'),
+                                    ),
+                                  ),
+                                
+                                if (isLive && !_hasCheckedIn) const SizedBox(width: 8),
+                                
+                                if (isLive)
+                                  Expanded(
+                                    child: OutlinedButton.icon(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => TriviaGameScreen(
+                                              event: widget.event,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      icon: const Icon(Icons.quiz),
+                                      label: const Text('Play Trivia'),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            
+                            // Review Button (if checked in)
+                            if (_hasCheckedIn) ...[
+                              const SizedBox(height: 8),
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton.icon(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => ReviewScreen(
+                                          event: widget.event,
+                                          brandId: widget.event.brandId,
+                                          onReviewSubmitted: () {
+                                            Navigator.pop(context);
+                                            widget.onCheckIn?.call();
+                                          },
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  icon: const Icon(Icons.rate_review),
+                                  label: const Text('Leave a Review'),
                                 ),
                               ),
-                            ),
+                            ],
                           ],
                         ),
                       ),

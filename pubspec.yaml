@@ -80,6 +80,18 @@ dependencies:
   # Barcode/QR Code
   qr_flutter: ^4.1.0
   barcode_widget: ^2.0.1
+  
+  # Calendar
+  table_calendar: ^3.1.2
+  
+  # Local Notifications
+  flutter_local_notifications: ^17.0.0
+  
+  # URL Launcher
+  url_launcher: ^6.2.5
+  
+  # Timezone
+  timezone: ^0.9.2
 
 dev_dependencies:
   flutter_test:
