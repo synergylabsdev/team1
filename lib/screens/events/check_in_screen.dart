@@ -3,7 +3,6 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../models/event_model.dart';
 import '../../services/check_in_service.dart';
 import '../../utils/app_theme.dart';
-import 'qr_scanner_screen.dart';
 
 class CheckInScreen extends StatefulWidget {
   final EventModel event;
@@ -159,7 +158,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Option 1: Show this code to event staff\nOption 2: Scan the event QR code',
+                        'Show this code to event staff to check in',
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
@@ -168,40 +167,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
                 ),
               ),
               
-              const SizedBox(height: 24),
-              
-              // Scan QR Code Button
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: _isCheckingIn
-                      ? null
-                      : () async {
-                          final result = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const QRScannerScreen(),
-                            ),
-                          );
-
-                          if (result == true) {
-                            // Check-in was successful via QR scan
-                            setState(() {
-                              _checkInComplete = true;
-                              _pointsEarned = 10;
-                            });
-                            widget.onCheckInComplete?.call();
-                          }
-                        },
-                  icon: const Icon(Icons.qr_code_scanner),
-                  label: const Text('Scan Event QR Code'),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                ),
-              ),
-              
-              const SizedBox(height: 16),
+              const SizedBox(height: 32),
               
               // Manual Check-In Button
               SizedBox(
@@ -222,7 +188,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
                           ),
                         )
                       : const Text(
-                          'Confirm Check-In (Manual)',
+                          'Confirm Check-In',
                           style: TextStyle(fontSize: 16),
                         ),
                 ),

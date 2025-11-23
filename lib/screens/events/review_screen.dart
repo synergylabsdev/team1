@@ -92,7 +92,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
         eventId: widget.event.id,
         brandId: widget.brandId,
         rating: _rating,
-        tagNames: _selectedTags.toList(),
+        tags: _selectedTags.toList(),
         comment: _commentController.text.trim().isEmpty
             ? null
             : _commentController.text.trim(),

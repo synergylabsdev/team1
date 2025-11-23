@@ -9,7 +9,7 @@ import '../../services/check_in_service.dart';
 import '../../services/favorite_service.dart';
 import '../../services/supabase_service.dart';
 import '../../utils/app_theme.dart';
-import 'qr_check_in_screen.dart';
+import 'check_in_screen.dart';
 import 'trivia_game_screen.dart';
 import 'review_screen.dart';
 
@@ -45,7 +45,7 @@ class _EventDetailsSheetState extends State<EventDetailsSheet> {
     try {
       final brand = await EventService.getBrand(widget.event.brandId);
       final favorited = await FavoriteService.isFavorited(widget.event.brandId);
-      
+
       // Check if user has checked in
       final userId = await _getUserId();
       bool checkedIn = false;
@@ -82,14 +82,14 @@ class _EventDetailsSheetState extends State<EventDetailsSheet> {
 
   String _getDistance() {
     if (widget.currentPosition == null) return '';
-    
+
     final distance = EventService.calculateDistance(
       widget.currentPosition!.latitude,
       widget.currentPosition!.longitude,
       widget.event.latitude,
       widget.event.longitude,
     );
-    
+
     if (distance < 1) {
       return '${(distance * 5280).toStringAsFixed(0)} feet away';
     }
@@ -106,14 +106,12 @@ class _EventDetailsSheetState extends State<EventDetailsSheet> {
       setState(() {
         _isFavorited = !_isFavorited;
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              _isFavorited
-                  ? 'Removed from favorites'
-                  : 'Added to favorites',
+              _isFavorited ? 'Removed from favorites' : 'Added to favorites',
             ),
             duration: const Duration(seconds: 2),
           ),
@@ -142,10 +140,10 @@ class _EventDetailsSheetState extends State<EventDetailsSheet> {
       );
 
       await Add2Calendar.addEvent2Cal(event);
-      
+
       // Schedule push notifications
       // await NotificationService.scheduleEventReminders(widget.event);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -165,7 +163,6 @@ class _EventDetailsSheetState extends State<EventDetailsSheet> {
       }
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -195,7 +192,7 @@ class _EventDetailsSheetState extends State<EventDetailsSheet> {
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
-                    
+
                     Expanded(
                       child: SingleChildScrollView(
                         controller: scrollController,
@@ -208,7 +205,8 @@ class _EventDetailsSheetState extends State<EventDetailsSheet> {
                               children: [
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       if (_brand != null)
                                         Text(
@@ -223,9 +221,9 @@ class _EventDetailsSheetState extends State<EventDetailsSheet> {
                                       const SizedBox(height: 4),
                                       Text(
                                         widget.event.storeName,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleLarge,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.titleLarge,
                                       ),
                                     ],
                                   ),
@@ -250,36 +248,32 @@ class _EventDetailsSheetState extends State<EventDetailsSheet> {
                                   ),
                               ],
                             ),
-                            
+
                             const SizedBox(height: 16),
-                            
+
                             // Date & Time
                             _buildDetailRow(
                               Icons.calendar_today,
                               _formatDateTime(widget.event.dateStart),
                             ),
-                            
+
                             const SizedBox(height: 8),
-                            
+
                             // Location
                             _buildDetailRow(
                               Icons.location_on,
                               widget.event.location,
                             ),
-                            
+
                             if (widget.currentPosition != null) ...[
                               const SizedBox(height: 4),
                               Text(
                                 _getDistance(),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.copyWith(
-                                      color: AppTheme.textSecondary,
-                                    ),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(color: AppTheme.textSecondary),
                               ),
                             ],
-                            
+
                             if (widget.event.description != null) ...[
                               const SizedBox(height: 16),
                               const Divider(),
@@ -294,9 +288,9 @@ class _EventDetailsSheetState extends State<EventDetailsSheet> {
                                 style: Theme.of(context).textTheme.bodyMedium,
                               ),
                             ],
-                            
+
                             const SizedBox(height: 24),
-                            
+
                             // Action Buttons
                             Row(
                               children: [
@@ -318,9 +312,9 @@ class _EventDetailsSheetState extends State<EventDetailsSheet> {
                                 ),
                               ],
                             ),
-                            
+
                             const SizedBox(height: 8),
-                            
+
                             // Action Buttons Row
                             Row(
                               children: [
@@ -331,17 +325,22 @@ class _EventDetailsSheetState extends State<EventDetailsSheet> {
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (_) => const QRCheckInScreen(),
+                                            builder: (_) => CheckInScreen(
+                                              event: widget.event,
+                                              onCheckInComplete: () {
+                                                _loadEventDetails();
+                                                widget.onCheckIn?.call();
+                                              },
+                                            ),
                                           ),
-                                        ).then((_) {
-                                          // Refresh check-in status
-                                          _loadEventDetails();
-                                        });
+                                        );
                                       },
-                                      icon: const Icon(Icons.qr_code_scanner),
+                                      icon: const Icon(Icons.check_circle),
                                       label: const Text('Check In'),
                                       style: ElevatedButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(vertical: 16),
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 16,
+                                        ),
                                         backgroundColor: AppTheme.successColor,
                                       ),
                                     ),
@@ -354,9 +353,10 @@ class _EventDetailsSheetState extends State<EventDetailsSheet> {
                                       label: const Text('Already Checked In'),
                                     ),
                                   ),
-                                
-                                if (isLive && !_hasCheckedIn) const SizedBox(width: 8),
-                                
+
+                                if (isLive && !_hasCheckedIn)
+                                  const SizedBox(width: 8),
+
                                 if (isLive)
                                   Expanded(
                                     child: OutlinedButton.icon(
@@ -376,7 +376,7 @@ class _EventDetailsSheetState extends State<EventDetailsSheet> {
                                   ),
                               ],
                             ),
-                            
+
                             // Review Button (if checked in)
                             if (_hasCheckedIn) ...[
                               const SizedBox(height: 8),
@@ -420,13 +420,9 @@ class _EventDetailsSheetState extends State<EventDetailsSheet> {
         Icon(icon, size: 20, color: AppTheme.textSecondary),
         const SizedBox(width: 8),
         Expanded(
-          child: Text(
-            text,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+          child: Text(text, style: Theme.of(context).textTheme.bodyMedium),
         ),
       ],
     );
   }
 }
-

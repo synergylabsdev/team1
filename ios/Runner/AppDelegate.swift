@@ -11,7 +11,7 @@ import UIKit
     if let apiKey = Bundle.main.object(forInfoDictionaryKey: "GMSApiKey") as? String,
        !apiKey.isEmpty {
       GMSServices.provideAPIKey(apiKey)
-      if apiKey == "REPLACE_WITH_YOUR_IOS_GOOGLE_MAPS_KEY" {
+      if apiKey == "" {
         NSLog("Google Maps API key is using the placeholder value. Update GMSApiKey in Info.plist before shipping.")
       }
     } else {
