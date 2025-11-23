@@ -145,7 +145,7 @@ class _EventDetailsSheetState extends State<EventDetailsSheet> {
       await Add2Calendar.addEvent2Cal(event);
       
       // Schedule push notifications
-      await NotificationService.scheduleEventReminders(widget.event);
+      // await NotificationService.scheduleEventReminders(widget.event);
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

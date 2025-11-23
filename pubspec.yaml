@@ -85,8 +85,6 @@ dependencies:
   # Calendar
   table_calendar: ^3.1.2
   
-  # Local Notifications
-  flutter_local_notifications: ^19.5.0
   
   # URL Launcher
   url_launcher: ^6.2.5

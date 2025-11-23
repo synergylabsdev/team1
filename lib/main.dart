@@ -14,7 +14,7 @@ void main() async {
   await SupabaseService.initialize();
   
   // Initialize Notifications
-  await NotificationService.initialize();
+  // await NotificationService.initialize();
   
   // Initialize Auth Service
   await AuthService().initialize();
