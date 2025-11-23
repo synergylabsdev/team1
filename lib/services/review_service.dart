@@ -24,11 +24,12 @@ class ReviewService {
   static Future<List<String>> getTagIdsFromNames(List<String> tagNames) async {
     try {
       final tags = await getAllTags();
-      final tagMap = {for (var tag in tags) tag.name: tag.id};
+      final tagMap = {
+        for (var tag in tags) tag.name.toLowerCase(): tag.id,
+      };
       return tagNames
-          .map((name) => tagMap[name])
-          .where((id) => id != null)
-          .cast<String>()
+          .map((name) => tagMap[name.toLowerCase()])
+          .whereType<String>()
           .toList();
     } catch (e) {
       print('Error getting tag IDs: $e');
